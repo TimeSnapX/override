@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f2a">
+<meta name="description" content="OVERRIDE — a fast, cheeky, neon mobile FPS. Humans vs the machines, Brisbane 2100.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OVERRIDE">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>OVERRIDE — Brisbane 2100</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="floaters"></div>
+
+<!-- ================= HUD ================= -->
+<div id="hud" class="hidden">
+  <div id="hud-tl">
+    <button id="btn-pause" class="icon-btn" aria-label="Pause">❚❚</button>
+    <div class="bars">
+      <div class="bar hp"><i id="hp-fill"></i><span id="hp-text">100</span></div>
+      <div class="bar ar"><i id="ar-fill"></i></div>
+    </div>
+  </div>
+  <div id="hud-tc">
+    <div id="wave-label">WAVE 1</div>
+    <div id="enemies-label"></div>
+    <div id="boss" class="hidden"><div class="boss-name">WARDEN UNIT</div><div class="bar boss"><i id="boss-shield"></i><i id="boss-fill"></i></div></div>
+    <div id="pa" class="hidden"></div>
+  </div>
+  <div id="hud-tr">
+    <div id="score">0</div>
+    <div id="mult-wrap"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="bg"/><circle id="mult-ring" cx="22" cy="22" r="19" class="fg"/></svg><span id="mult">×1</span></div>
+    <div id="best">BEST 0</div>
+  </div>
+  <div id="hud-bl">
+    <div id="ovr"><div id="ovr-fill"></div><span>🦩 OVERRIDE <b id="ovr-pct">0%</b></span></div>
+    <div id="dash-pips"><i></i><i></i></div>
+  </div>
+  <div id="hud-weapon">
+    <div id="w-name">PULSE RIFLE</div>
+    <div id="w-ammo"><b id="w-mag">36</b><span>/</span><em id="w-res">216</em></div>
+    <div id="w-slots"></div>
+  </div>
+  <div id="crosshair"><i></i><i></i><i></i><i></i><svg id="charge" viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" id="charge-ring"/></svg></div>
+  <div id="hitmarker"></div>
+  <div id="dmgdir"></div>
+  <div id="killfeed"></div>
+  <div id="banner" class="hidden"><h1></h1><h2></h2></div>
+  <div id="toasts"></div>
+  <div id="scope" class="hidden"><div class="ring"></div><div class="cross"></div><div class="readout">THERMAL ×2.5 · <span id="range">--</span></div></div>
+  <div id="prompt" class="hidden"></div>
+  <button id="btn-ready" class="btn hidden">READY ▸ <small id="ready-t"></small></button>
+  <div id="fps" class="hidden">-- fps</div>
+</div>
+
+<!-- ================= TOUCH CONTROLS ================= -->
+<div id="touch" class="hidden">
+  <div id="joy-base"><div id="joy-knob"></div></div>
+  <div class="tbtn big" id="tb-fire" data-btn="fire">FIRE</div>
+  <div class="tbtn" id="tb-reload" data-btn="reload">⟳</div>
+  <div class="tbtn" id="tb-swap" data-btn="swap">⇄</div>
+  <div class="tbtn" id="tb-dash" data-btn="dash">DASH</div>
+  <div class="tbtn" id="tb-jump" data-btn="jump">⤒</div>
+  <div class="tbtn ovr" id="tb-override" data-btn="override"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" id="tb-ovr-ring"/></svg><span>HACK</span></div>
+  <div class="tbtn hidden" id="tb-scope" data-btn="scope">◎</div>
+  <div class="tbtn wide hidden" id="tb-play" data-btn="interact">▶ PLAY</div>
+</div>
+
+<!-- ================= SCREENS ================= -->
+<div id="boot" class="screen">
+  <div class="logo">OVERRIDE</div>
+  <div class="tag">BRISBANE · 2100</div>
+  <div class="progress"><i id="boot-bar"></i></div>
+  <div id="boot-msg">Booting resistance firmware…</div>
+  <button id="btn-start" class="btn hidden">TAP TO START</button>
+</div>
+
+<div id="intro" class="screen hidden">
+  <div class="card">
+    <div class="radio">📻 MUMBLE · ENCRYPTED</div>
+    <p id="intro-text"></p>
+    <button id="btn-intro" class="btn">LET'S GO ▸</button>
+  </div>
+</div>
+
+<div id="menu" class="screen hidden">
+  <div class="logo">OVERRIDE</div>
+  <div class="tag">HUMANS vs SYNOD · NEW MEANJIN 2100</div>
+  <div class="menu-col">
+    <button class="btn" id="m-play">PLAY SURVIVAL</button>
+    <button class="btn" id="m-arcade">ARCADE CORNER</button>
+    <button class="btn" id="m-scores">HIGH SCORES</button>
+    <button class="btn" id="m-settings">SETTINGS</button>
+    <button class="btn" id="m-howto">HOW TO PLAY</button>
+  </div>
+  <div class="menu-foot"><span id="m-best">BEST 0</span> · <span id="m-banana"></span> · <button class="link" id="m-mute">🔊</button> <button class="link" id="m-fs">⛶</button></div>
+</div>
+
+<div id="arcade-menu" class="screen hidden">
+  <h2>ARCADE CORNER</h2>
+  <div class="menu-col">
+    <button class="btn" id="am-cycles">NEON CYCLES</button>
+    <button class="btn" id="am-invaders">ROBO INVADERS</button>
+    <button class="btn ghost" id="am-back">BACK</button>
+  </div>
+  <p class="small" id="am-best"></p>
+</div>
+
+<div id="scores" class="screen hidden"><h2>HIGH SCORES</h2><div id="scores-list"></div><button class="btn ghost" id="sc-back">BACK</button></div>
+
+<div id="howto" class="screen hidden">
+  <h2>HOW TO PLAY</h2>
+  <div class="howto">
+    <p><b>Survive 10 waves</b> of SYNOD machines on the Fortitude Heights rooftop. Wave 10 is the Warden.</p>
+    <p><b>Phone:</b> left thumb = move (floating stick), drag right side = look, hold FIRE (you can drag it to aim too). Rail weapons charge while held, fire on release. ◎ = thermal scope.</p>
+    <p><b>Desktop:</b> WASD · mouse · click fire · right-click scope · R reload · 1–5 / wheel / Q weapons · Shift dash · Space jump · E OVERRIDE / play cabinet · Esc pause · M mute.</p>
+    <p><b>OVERRIDE</b> (🦩 meter): when full, hack the nearest machine — it fights for you for 10 s, then self-destructs.</p>
+    <p><b>Weak points:</b> Wasp eyes, Sentinel cores (shoot the chest plates to pop them open), the Warden's core once its shield nodes are down.</p>
+    <p><b>Arcade corner</b> (south-west, under the awning) is open before wave 1 and in breathers. Beat target scores for rewards.</p>
+    <p>Rumour has it there are <b>three golden bananas</b> somewhere on this roof…</p>
+  </div>
+  <button class="btn ghost" id="ht-back">BACK</button>
+</div>
+
+<div id="settings" class="screen hidden">
+  <h2>SETTINGS</h2>
+  <div class="settings-grid">
+    <label>Graphics</label><select id="s-quality"><option value="auto">Auto</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="ultra">Ultra</option></select>
+    <label>Look sensitivity</label><input type="range" id="s-sens" min="0.4" max="2.4" step="0.1">
+    <label>Field of view</label><input type="range" id="s-fov" min="70" max="100" step="1">
+    <label>Invert Y</label><input type="checkbox" id="s-invert">
+    <label>Aim assist (touch)</label><input type="checkbox" id="s-assist">
+    <label>Auto-fire on aim (touch)</label><input type="checkbox" id="s-autofire">
+    <label>Haptics</label><input type="checkbox" id="s-haptics">
+    <label>Head bob</label><input type="checkbox" id="s-bob">
+    <label>Screen shake</label><input type="checkbox" id="s-shake">
+    <label>Damage numbers</label><input type="checkbox" id="s-dmgnum">
+    <label>Show FPS</label><input type="checkbox" id="s-fps">
+    <label>Sound</label><input type="checkbox" id="s-sound">
+  </div>
+  <div class="small" id="s-info"></div>
+  <button class="btn ghost" id="s-back">BACK</button>
+</div>
+
+<div id="pause" class="screen hidden">
+  <h2>PAUSED</h2>
+  <div class="menu-col">
+    <button class="btn" id="p-resume">RESUME</button>
+    <button class="btn" id="p-settings">SETTINGS</button>
+    <button class="btn ghost" id="p-quit">QUIT TO MENU</button>
+  </div>
+</div>
+
+<div id="end" class="screen hidden">
+  <h1 id="end-title">ROOFTOP HELD</h1>
+  <p id="end-sub"></p>
+  <div id="end-score"></div>
+  <div id="end-stats"></div>
+  <div id="awards"></div>
+  <div id="initials" class="hidden">
+    <div class="small">NEW HIGH SCORE — ENTER INITIALS</div>
+    <div class="letters"><button data-i="0">K</button><button data-i="1">E</button><button data-i="2">S</button></div>
+    <button class="btn small" id="ini-ok">SAVE</button>
+  </div>
+  <div class="menu-row">
+    <button class="btn" id="e-again">PLAY AGAIN</button>
+    <button class="btn ghost" id="e-menu">MAIN MENU</button>
+  </div>
+</div>
+
+<div id="arcade" class="hidden">
+  <div id="arcade-head"><span id="arcade-title">ARCADE</span><span id="arcade-best"></span><button class="btn small ghost" id="arcade-exit">EXIT ✕</button></div>
+  <div id="arcade-body">
+    <div class="pad-dirs"><button data-pad="up">▲</button><div><button data-pad="left">◀</button><button data-pad="right">▶</button></div><button data-pad="down">▼</button></div>
+    <div id="arcade-screen"><canvas id="arcade-canvas"></canvas><div class="crt"></div>
+      <div id="arcade-result" class="hidden"><div id="arcade-result-text"></div><div id="arcade-choice"></div><button class="btn small" id="arcade-retry">PLAY AGAIN</button></div>
+    </div>
+    <div class="pad-fire"><button data-pad="fire">A</button></div>
+  </div>
+</div>
+
+<div id="rotate" class="hidden"><div class="phone"></div><p>Rotate your device to landscape</p><p class="small" id="ios-tip-rot"></p></div>
+<div id="ios-tip" class="hidden"><p>📲 For true fullscreen on iPhone: tap <b>Share</b> → <b>Add to Home Screen</b>, then launch OVERRIDE from your home screen.</p><button class="btn small" id="ios-ok">GOT IT</button></div>
+<div id="debug" class="hidden"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
